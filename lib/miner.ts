@@ -9,14 +9,21 @@ import {
 import { privateKeyToAccount } from "viem/accounts";
 import { sepolia } from "viem/chains";
 
-const RPCS = ["https://sepolia.drpc.org", "https://1rpc.io/sepolia"];
+const RPCS = {
+  1: ["https://eth.drpc.org", "https://1rpc.io/eth"],
+  11155111: ["https://sepolia.drpc.org", "https://1rpc.io/sepolia"],
+};
 
-export function createMiner(privkey: string, rpcs = RPCS) {
+export function createMiner(
+  privkey: string,
+  chain = sepolia,
+  rpcs = RPCS[chain.id],
+) {
   const account = privateKeyToAccount(`0x${privkey.replace("0x", "")}`);
 
   const wc = createWalletClient({
     account,
-    chain: sepolia,
+    chain,
     transport: fallback(rpcs.map((x) => http(x)).concat(http())),
   }).extend(walletL1FacetActions);
 

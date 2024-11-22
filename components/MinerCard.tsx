@@ -5,6 +5,15 @@ import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// import {
+//   Select,
+//   SelectContent,
+//   SelectGroup,
+//   SelectItem,
+//   SelectLabel,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,6 +38,8 @@ import { stringify, toHex } from "viem";
 import { Loader2 } from "lucide-react";
 import { privateKeyToAccount } from "viem/accounts";
 import { PasswordInput } from "@/components/PasswordInput";
+import { mainnet, sepolia } from "viem/chains";
+import SwitchWithState from "@/components/NetworkSwitcher";
 
 export function MinerCard() {
   const [loading, setLoading] = useState(false);
@@ -37,7 +48,7 @@ export function MinerCard() {
   const [mining, setMining] = useState<boolean>(false);
   const [miner, setMiner] = useState<any>(null);
   const [account, setAccount] = useState<any>();
-
+  const [network, setNetwork] = useState<any>(sepolia);
   const [mined, setMined] = useState<any>([]);
   const [ethBalance, setEthBalance] = useState("0");
   const [fctBalance, setFctBalance] = useState("0");
@@ -62,7 +73,7 @@ export function MinerCard() {
         const savedResults = localStorage.getItem("results_" + account.address);
 
         setAccount(account);
-        setMiner(createMiner(privkey));
+        setMiner(createMiner(privkey, network as any));
         setEthBalance(fmtEther(ethBalance));
         setFctBalance(fmtEther(fctBalance));
         setMined(JSON.parse(savedResults || "[]"));
@@ -76,7 +87,7 @@ export function MinerCard() {
 
       setErrorState(null);
     }
-  }, [privkey]);
+  }, [privkey, network]);
 
   useEffect(() => {
     if (mining) {
@@ -128,6 +139,18 @@ export function MinerCard() {
     setLoading(false);
 
     (pub ? setEthBalance : setFctBalance)(fmtEther(balance));
+  };
+
+  const toggleNetwork = async (state: boolean) => {
+    if (!privkey) return;
+
+    if (state) {
+      setNetwork(mainnet);
+      setMiner(createMiner(privkey, mainnet as any));
+    } else {
+      setNetwork(sepolia);
+      setMiner(createMiner(privkey));
+    }
   };
 
   return (
@@ -219,6 +242,13 @@ export function MinerCard() {
             <Loader2 className="animate-spin" /> Mining...
           </Button>
         )}
+        <SwitchWithState
+          disabled
+          defaultState={false}
+          onLabel="Mainnet"
+          offLabel="Sepolia"
+          onToggle={toggleNetwork}
+        />
         {mining === false && (
           <Button
             onClick={() => setMining(true)}
