@@ -91,7 +91,9 @@ export function MinerCard() {
       let result;
 
       try {
-        result = await miner.mine(toHex("enciphered".repeat(getRand(1, 5))));
+        result = await miner.mine(
+          toHex("enciphered".repeat(getRand(100, 300))),
+        );
       } catch (err: any) {
         console.error("Failure:", err);
         setErrorState({
