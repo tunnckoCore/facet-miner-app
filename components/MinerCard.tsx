@@ -87,6 +87,8 @@ export function MinerCard() {
 
       try {
         result = await miner.mine(
+          // toHex("enciphered".repeat(getRand(100, 300))),
+          // `0x${"2".repeat(101_800)}`,
           toHex("enciphered".repeat(getRand(100, 300))),
         );
       } catch (err: any) {
@@ -285,7 +287,7 @@ export function MinerCard() {
                         <Link
                           target="_blank"
                           className="text-blue-500 external"
-                          href={`https://etherscan.io/tx/${txHash}`}
+                          href={`https://sepolia.etherscan.io/tx/${txHash}`}
                         >
                           {txHash.slice(0, 6) + "..." + txHash.slice(-4)}
                         </Link>

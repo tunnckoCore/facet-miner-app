@@ -7,7 +7,7 @@ import {
   createPublicClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { mainnet, sepolia } from "viem/chains";
+import { sepolia } from "viem/chains";
 
 const RPCS = {
   1: ["https://eth.drpc.org", "https://1rpc.io/eth"],
@@ -124,6 +124,8 @@ export async function mineFCT(
   } = await wc.sendFacetTransaction({
     to: account.address || account,
     data: calldata,
+    // data: "0x",
+    // extraData: calldata,
     value: 0n,
   });
 
