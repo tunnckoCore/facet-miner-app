@@ -160,8 +160,8 @@ export function MinerCard() {
         <CardDescription>
           <Link
             target="_blank"
-            href="https://docs.facet.org"
             className="text-blue-500 external"
+            href="https://docs.facet.org"
           >
             Facet v2
           </Link>{" "}
@@ -171,6 +171,7 @@ export function MinerCard() {
             The private key is not stored anywhere, you can verify that in the
             open source{" "}
             <Link
+              target="_blank"
               className="external text-blue-500"
               href="https://github.com/tunnckocore/facet-miner-app"
             >
