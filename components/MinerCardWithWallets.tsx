@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -19,14 +19,19 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { createMiner, fmtEther, getRand } from "@/lib/miner";
 import Link from "next/link";
-import { stringify, toHex } from "viem";
+import {
+  createWalletClient,
+  custom,
+  stringify,
+  toHex,
+  WalletClient,
+} from "viem";
 import { Loader2 } from "lucide-react";
 import { privateKeyToAccount } from "viem/accounts";
-import { PasswordInput } from "@/components/PasswordInput";
 import { mainnet, sepolia } from "viem/chains";
 import SwitchWithState from "@/components/NetworkSwitcher";
 
-export function MinerCard() {
+export function MinerCardWithWallets() {
   const [loading, setLoading] = useState(false);
   const [privkey, setPrivkey] = useState<string>("");
   const [mining, setMining] = useState<boolean>(false);
@@ -38,6 +43,11 @@ export function MinerCard() {
   const [fctBalance, setFctBalance] = useState("0");
   const [errorState, setErrorState] = useState<any>();
 
+  const connect = useCallback(connectWallet, [network]);
+  useEffect(() => {
+    connect();
+  }, [connect]);
+
   useEffect(() => {
     if (!privkey) return;
 
@@ -45,18 +55,19 @@ export function MinerCard() {
 
     async function main() {
       try {
-        const _miner = createMiner(privkey, network as any);
+        const _miner = miner || (await createMiner(privkey, network as any));
 
-        const account = privateKeyToAccount(`0x${privkey.replace("0x", "")}`);
+        const acc =
+          account || privateKeyToAccount(`0x${privkey.replace("0x", "")}`);
         const ethBalance = await _miner.publicClient.getBalance({
-          address: account.address,
+          address: acc.address,
         });
         const fctBalance = await _miner.facetClient.getBalance({
-          address: account.address,
+          address: acc.address,
         });
-        const savedResults = localStorage.getItem("results_" + account.address);
+        const savedResults = localStorage.getItem("results_" + acc.address);
 
-        setAccount(account);
+        setAccount(acc);
         setMiner(_miner);
         setEthBalance(fmtEther(ethBalance));
         setFctBalance(fmtEther(fctBalance));
@@ -71,7 +82,7 @@ export function MinerCard() {
 
       setErrorState(null);
     }
-  }, [privkey, network]);
+  }, [account, miner, privkey, network]);
 
   useEffect(() => {
     if (mining) {
@@ -86,10 +97,15 @@ export function MinerCard() {
       let result;
 
       try {
+        connect();
+
+        alert("address:" + account.address);
+
         result = await miner.mine(
           // toHex("enciphered".repeat(getRand(100, 300))),
           // `0x${"2".repeat(101_800)}`,
           toHex("enciphered".repeat(getRand(100, 300))),
+          account.address,
         );
       } catch (err: any) {
         console.error("Failure:", err);
@@ -113,10 +129,10 @@ export function MinerCard() {
         return newState;
       });
     }
-  }, [account, mined, mining, miner]);
+  }, [account, connect, mined, mining, miner]);
 
   const getBalance = async (pub) => {
-    if (!miner && !privkey) return;
+    if (!miner && !account) return;
 
     setLoading(true);
     const balance = await (
@@ -140,6 +156,39 @@ export function MinerCard() {
       setMiner(createMiner(privkey));
     }
   };
+
+  async function connectWallet(e?: any) {
+    e?.preventDefault();
+
+    const walletClient = createWalletClient({
+      chain: network,
+      transport: custom((window as any).ethereum as any),
+    });
+
+    const _miner = await createMiner(walletClient, network);
+
+    const wc = _miner.walletClient as WalletClient;
+    const [address] = await wc.requestAddresses();
+    const accNetId = await wc.getChainId();
+
+    if (accNetId !== network.id) {
+      await wc.switchChain({ id: network.id });
+    }
+
+    const acc = { address };
+
+    const ethBalance = await _miner.publicClient.getBalance({
+      address: acc.address,
+    });
+    const fctBalance = await _miner.facetClient.getBalance({
+      address: acc.address,
+    });
+
+    setMiner(_miner);
+    setAccount(acc);
+    setEthBalance(fmtEther(ethBalance));
+    setFctBalance(fmtEther(fctBalance));
+  }
 
   return (
     <Card className="w-[450px]">
@@ -170,32 +219,19 @@ export function MinerCard() {
               code here
             </Link>
           </strong>
-          .{" "}
-          <span className="italic">
-            The reason it cannot be done with Connect-flow is because it will
-            prompt you to confirm every transaction, so it cannot be automated.
-          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form>
           <div className="grid w-full items-center gap-4">
             <div className="flex flex-col space-y-1.5 gap-2">
-              <Label htmlFor="privkey">Private Key</Label>
-              <PasswordInput
-                id="privkey"
-                placeholder="Miner private key"
-                value={privkey}
-                onChange={(e: any) => setPrivkey(e.target.value)}
-              />
-              {privkey && account && (
-                <>
-                  <Label htmlFor="account">Account Address</Label>
-                  <Input id="account" value={account.address} disabled />
-                </>
+              {account ? (
+                <Button disabled>Disconnect manually!</Button>
+              ) : (
+                <Button onClick={connectWallet}>Connect Wallet</Button>
               )}
 
-              {privkey && (
+              {account && (
                 <div className="flex justify-between">
                   <Button
                     variant="outline"
@@ -245,7 +281,7 @@ export function MinerCard() {
           />
         </div>
 
-        {mining === true && privkey && (
+        {mining === true && account && (
           <Button disabled>
             <Loader2 className="animate-spin" /> Mining...
           </Button>
@@ -253,14 +289,14 @@ export function MinerCard() {
         {mining === false && (
           <Button
             onClick={() => setMining(true)}
-            disabled={loading || !Boolean(privkey)}
+            disabled={loading || !Boolean(account)}
           >
             Start Mining
           </Button>
         )}
       </CardFooter>
 
-      {privkey && mined.length > 0 && (
+      {account && mined.length > 0 && (
         <CardFooter>
           <ScrollArea className="h-52 w-full px-3">
             <div className="grid gap-2">

@@ -1,4 +1,6 @@
-import { walletL1FacetActions } from "@0xfacet/sdk/viem";
+"use client";
+
+import { facetSepolia, walletL1FacetActions } from "@0xfacet/sdk/viem";
 import {
   http,
   createWalletClient,
@@ -21,14 +23,16 @@ export function createMiner(
 ) {
   const account = privateKeyToAccount(`0x${privkey.replace("0x", "")}`);
 
+  // @ts-expect-error bro shutup
+  const net = chain.id === 1 ? "mainnet" : "sepolia";
+
   const publicClient = createPublicClient({
     chain,
     transport: http(),
   });
   const facetClient = createPublicClient({
     chain,
-    // TODO: derive network based passed `chain`
-    transport: http("https://sepolia.facet.org"),
+    transport: http(`https://${net}.facet.org`),
   });
   const walletClient = createWalletClient({
     account,
@@ -122,7 +126,8 @@ export async function mineFCT(
     fctMintAmount,
     // fctMintRate,
   } = await wc.sendFacetTransaction({
-    to: account.address || account,
+    // account,
+    to: account?.address || account,
     data: calldata,
     // data: "0x",
     // extraData: calldata,
@@ -140,13 +145,3 @@ export async function mineFCT(
     facetHash: facetTransactionHash,
   };
 }
-
-// async function run() {
-//   while (true) {
-//     console.log("Mining...");
-//     await mineFCT();
-//     await Bun.sleep(5000);
-//   }
-// }
-
-// // run();
