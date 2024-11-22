@@ -7,7 +7,7 @@ import {
   createPublicClient,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { sepolia } from "viem/chains";
+import { mainnet, sepolia } from "viem/chains";
 
 const RPCS = {
   1: ["https://eth.drpc.org", "https://1rpc.io/eth"],
@@ -22,11 +22,12 @@ export function createMiner(
   const account = privateKeyToAccount(`0x${privkey.replace("0x", "")}`);
 
   const publicClient = createPublicClient({
-    chain: sepolia,
+    chain,
     transport: http(),
   });
   const facetClient = createPublicClient({
-    chain: sepolia,
+    chain,
+    // TODO: derive network based passed `chain`
     transport: http("https://sepolia.facet.org"),
   });
   const walletClient = createWalletClient({
