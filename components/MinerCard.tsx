@@ -5,15 +5,6 @@ import { AlertCircle } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// import {
-//   Select,
-//   SelectContent,
-//   SelectGroup,
-//   SelectItem,
-//   SelectLabel,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,13 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  createMiner,
-  facetClient,
-  fmtEther,
-  getRand,
-  pubClient,
-} from "@/lib/miner";
+import { createMiner, fmtEther, getRand } from "@/lib/miner";
 import Link from "next/link";
 import { stringify, toHex } from "viem";
 import { Loader2 } from "lucide-react";
@@ -43,7 +28,6 @@ import SwitchWithState from "@/components/NetworkSwitcher";
 
 export function MinerCard() {
   const [loading, setLoading] = useState(false);
-  // const [count, setCount] = useState(0);
   const [privkey, setPrivkey] = useState<string>("");
   const [mining, setMining] = useState<boolean>(false);
   const [miner, setMiner] = useState<any>(null);
@@ -60,20 +44,20 @@ export function MinerCard() {
     main();
 
     async function main() {
-      // const _miner = createMiner(privkey);
-
       try {
+        const _miner = createMiner(privkey, network as any);
+
         const account = privateKeyToAccount(`0x${privkey.replace("0x", "")}`);
-        const ethBalance = await pubClient.getBalance({
+        const ethBalance = await _miner.publicClient.getBalance({
           address: account.address,
         });
-        const fctBalance = await facetClient.getBalance({
+        const fctBalance = await _miner.facetClient.getBalance({
           address: account.address,
         });
         const savedResults = localStorage.getItem("results_" + account.address);
 
         setAccount(account);
-        setMiner(createMiner(privkey, network as any));
+        setMiner(_miner);
         setEthBalance(fmtEther(ethBalance));
         setFctBalance(fmtEther(fctBalance));
         setMined(JSON.parse(savedResults || "[]"));
@@ -133,7 +117,9 @@ export function MinerCard() {
     if (!miner && !privkey) return;
 
     setLoading(true);
-    const balance = await (pub ? pubClient : facetClient).getBalance({
+    const balance = await (
+      pub ? miner.publicClient : miner.facetClient
+    ).getBalance({
       address: account.address,
     });
     setLoading(false);
@@ -238,18 +224,21 @@ export function MinerCard() {
           Stop
         </Button>
 
+        <div>
+          <SwitchWithState
+            disabled
+            defaultState={false}
+            onLabel="Mainnet"
+            offLabel="Sepolia"
+            onToggle={toggleNetwork}
+          />
+        </div>
+
         {mining === true && privkey && (
           <Button disabled>
             <Loader2 className="animate-spin" /> Mining...
           </Button>
         )}
-        <SwitchWithState
-          disabled
-          defaultState={false}
-          onLabel="Mainnet"
-          offLabel="Sepolia"
-          onToggle={toggleNetwork}
-        />
         {mining === false && (
           <Button
             onClick={() => setMining(true)}

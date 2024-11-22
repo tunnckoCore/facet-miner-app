@@ -21,16 +21,26 @@ export function createMiner(
 ) {
   const account = privateKeyToAccount(`0x${privkey.replace("0x", "")}`);
 
-  const wc = createWalletClient({
+  const publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http(),
+  });
+  const facetClient = createPublicClient({
+    chain: sepolia,
+    transport: http("https://sepolia.facet.org"),
+  });
+  const walletClient = createWalletClient({
     account,
     chain,
     transport: fallback(rpcs.map((x) => http(x)).concat(http())),
   }).extend(walletL1FacetActions);
 
   return {
-    wc,
+    publicClient,
+    facetClient,
+    walletClient,
     mine: async (calldata = `0x${"2".repeat(261_800)}`) =>
-      mineFCT(wc, account, calldata),
+      mineFCT(walletClient, account, calldata),
   };
 }
 
@@ -58,20 +68,9 @@ export function fmtEther(bal: bigint, decimals = 5) {
       : result;
 }
 
-console.log(fmtEther(294400000000000000n));
-
 export function getRand(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
-export const pubClient = createPublicClient({
-  chain: sepolia,
-  transport: http(),
-});
-export const facetClient = createPublicClient({
-  chain: sepolia,
-  transport: http("https://sepolia.facet.org"),
-});
 
 // async function mineFacet() {
 //   return {
