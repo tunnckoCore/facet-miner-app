@@ -294,18 +294,18 @@ export function MinerCard() {
                         <Link
                           target="_blank"
                           className="text-blue-500 external"
-                          href={`https://${network.id === 1 ? "" : "sepolia."}explorer.facet.org/tx/${facetHash}`}
+                          href={`https://${network.id === 1 ? "" : "sepolia."}etherscan.io/tx/${txHash}`}
                         >
-                          {facetHash.slice(0, 6) + "..." + facetHash.slice(-4)}
+                          {txHash.slice(0, 6) + "..." + txHash.slice(-4)}
                         </Link>
                       </div>
                       <div>
                         <Link
                           target="_blank"
                           className="text-blue-500 external"
-                          href={`https://${network.id === 1 ? "" : "sepolia."}etherscan.io/tx/${txHash}`}
+                          href={`https://${network.id === 1 ? "" : "sepolia."}explorer.facet.org/tx/${facetHash}`}
                         >
-                          {txHash.slice(0, 6) + "..." + txHash.slice(-4)}
+                          {facetHash.slice(0, 6) + "..." + facetHash.slice(-4)}
                         </Link>
                       </div>
                       <div>{fctMined}</div>
