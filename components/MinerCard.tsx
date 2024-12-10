@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RotateCw } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -121,16 +121,24 @@ export function MinerCard() {
     setLoading(true);
     const balance = await (
       pub ? miner.publicClient : miner.facetClient
-    ).getBalance({
-      address: account.address,
-    });
+    )
+      .getBalance({
+        address: account.address,
+      });
+
     setLoading(false);
 
     (pub ? setEthBalance : setFctBalance)(fmtEther(balance));
   };
 
   const toggleNetwork = async (state: boolean) => {
-    if (!privkey) return;
+    if (!privkey) {
+      setErrorState({
+        title: "Error",
+        body: "No private key provided.",
+      });
+      return;
+    }
 
     if (state) {
       setNetwork(mainnet);
@@ -202,7 +210,7 @@ export function MinerCard() {
                     disabled={mining || loading || !account}
                     onClick={() => getBalance(true)}
                   >
-                    {ethBalance} ETH
+                    {ethBalance} ETH <RotateCw />
                   </Button>
 
                   <Button
@@ -210,7 +218,7 @@ export function MinerCard() {
                     disabled={mining || loading || !account}
                     onClick={() => getBalance(false)}
                   >
-                    {fctBalance} FCT
+                    {fctBalance} FCT <RotateCw />
                   </Button>
                 </div>
               )}
@@ -237,7 +245,7 @@ export function MinerCard() {
 
         <div>
           <SwitchWithState
-            disabled
+            disabled={privkey === ''}
             defaultState={false}
             onLabel="Mainnet"
             offLabel="Sepolia"
@@ -265,9 +273,9 @@ export function MinerCard() {
           <ScrollArea className="h-52 w-full px-3">
             <div className="grid gap-2">
               <div className="flex justify-between">
-                <div className="text-ellipsis">Facet Transaction</div>
-                <div>Mined Amount</div>
-                <div className="text-ellipsis">L1 Transaction</div>
+                <div className="text-ellipsis">Ethereum TX</div>
+                <div className="text-ellipsis">Facet TX</div>
+                <div>FCT Mined</div>
               </div>
 
               {mined.map(
@@ -291,7 +299,6 @@ export function MinerCard() {
                           {facetHash.slice(0, 6) + "..." + facetHash.slice(-4)}
                         </Link>
                       </div>
-                      <div>{fctMined}</div>
                       <div>
                         <Link
                           target="_blank"
@@ -301,6 +308,7 @@ export function MinerCard() {
                           {txHash.slice(0, 6) + "..." + txHash.slice(-4)}
                         </Link>
                       </div>
+                      <div>{fctMined}</div>
                     </div>
                   );
                 },

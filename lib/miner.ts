@@ -32,7 +32,9 @@ export function createMiner(
   });
   const facetClient = createPublicClient({
     chain,
-    transport: http(`https://${net}.facet.org`),
+    // transport: http(`https://${net}.facet.org`),
+    // TODO: fix this when we have mainnet.facet.org live (soon)
+    transport: http(`https://sepolia.facet.org`),
   });
   const walletClient = createWalletClient({
     account,
