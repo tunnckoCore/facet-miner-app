@@ -183,6 +183,9 @@ export function MinerCard() {
             The reason it cannot be done with Connect-flow is because it will
             prompt you to confirm every transaction, so it cannot be automated.
           </span>
+          <br />
+          <br />
+          <strong>As appreciation you can donate to <code>tunnckocore.eth</code></strong>
         </CardDescription>
       </CardHeader>
       <CardContent>
